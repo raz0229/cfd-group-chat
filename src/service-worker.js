@@ -1,28 +1,51 @@
-import { build, files, timestamp } from '$service-worker';
-const worker = (self as unknown) as any;
-const FILES = `cache${timestamp}`;
+import { build, files, version } from '$service-worker';
+ 
+const worker = self;
+const CACHE_NAME = `A;static-cache-${version}`;
+ 
 const to_cache = build.concat(files);
-const staticAssets = new Set(to_cache);
-// listen for the install events
+ 
 worker.addEventListener('install', (event) => {
-    event.waitUntil(
-        caches
-            .open(FILES)
-            .then((cache) => cache.addAll(to_cache))
-            .then(() => {
-                worker.skipWaiting();
-            })
-    );
+  console.log('[ServiceWorker] Install');
+ 
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      console.log('[ServiceWorker] Pre-caching offline page');
+      return cache.addAll(to_cache).then(() => {
+        worker.skipWaiting();
+      });
+    }),
+  );
 });
-// listen for the activate events
+ 
 worker.addEventListener('activate', (event) => {
-    event.waitUntil(
-        caches.keys().then(async (keys) => {
-            // delete old caches
-            for (const key of keys) {
-                if (key !== FILES) await caches.delete(key);
-            }
-            worker.clients.claim();
-        })
-    );
+  console.log('[ServiceWorker] Activate');
+  // Remove previous cached data from disk
+  event.waitUntil(
+    caches.keys().then(async (keys) =>
+      Promise.all(
+        keys.map((key) => {
+          if (key !== CACHE_NAME) {
+            console.log('[ServiceWorker] Removing old cache', key);
+            return caches.delete(key);
+          }
+        }),
+      ),
+    ),
+  );
+  worker.clients.claim();
+});
+ 
+self.addEventListener('fetch', (event) => {
+  console.log('[ServiceWorker] Fetch', event.request.url);
+  if (event.request.mode !== 'navigate') {
+    return;
+  }
+  event.respondWith(
+    fetch(event.request).catch(() => {
+      return caches.open(CACHE_NAME).then((cache) => {
+        return cache.match('offline.html');
+      });
+    }),
+  );
 });

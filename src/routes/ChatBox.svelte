@@ -37,7 +37,6 @@
 		} catch {
 			messages = [{message:"Network Error! Please reload", created: ":(", uname: "*-*"}]; 
 		}
-		console.log('40: ', messages)
 		showLoadingBar = false;
 	}
 	})
@@ -94,6 +93,12 @@
 				"uname": uname,
 				"val": col_val
 			})
+		}
+
+		if (browser) {
+			const wrapper = document.querySelector(".messages-wrapper")
+			if (wrapper)
+				wrapper.scrollTo(0, wrapper.scrollHeight);
 		}
 		return col_val
 	}
@@ -211,6 +216,7 @@
 		padding: 10px;
 		border-radius: 20px;
 		width: fit-content;
+		min-width: 10vh;
 	}
 	.uname, .message {
 		font-size: 20px;

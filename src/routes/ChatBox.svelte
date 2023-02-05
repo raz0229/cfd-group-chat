@@ -15,6 +15,7 @@
 
 	let showLoadingBar = false;
 	let messages = [];
+	let counter = 3;
 
 	const displayed_count = spring();
 	$: displayed_count.set(count);
@@ -35,6 +36,7 @@
 
 		try {
 			messages = await getMessages();
+			messages.splice(0, messages.length - counter);
 		} catch {
 			messages = [{message:"Network Error! Please reload", created: ":(", uname: "*-*"}]; 
 		}
@@ -45,8 +47,11 @@
 
 	// Listen for real-time updates
 	const unsub = onSnapshot(doc(db, "chats", "messages"), (doc) => {
-    	if (doc.data())
-			messages = doc.data().messages
+    	if (doc.data()) {
+			counter++;
+			messages = doc.data().messages;
+			messages.splice(0, messages.length - counter);
+		}
 
 		setTimeout(() => scrollDown());
 	});

@@ -166,7 +166,7 @@
 		{:else}
 		<div class="messages-wrapper">
 			<div class="in-message">
-				<span class="uname" style="color:hsl({getRand('raz0229')},70%,30%)"><b>👑 raz0229<span><sup>DEV</sup></span>:</b></span>
+				<span class="uname" style="color:hsl({getRand('raz0229')},70%,30%)"><b>👑 raz0229 <span><sup>DEV</sup></span>:</b></span>
 				<span class="message">Hi! Welcome to FAST-CFD Chat. Be civil and respectful</span>
 				<span class="timestamp">Feb 05 01:08</span>
 			</div>

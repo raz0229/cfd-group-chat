@@ -8,6 +8,7 @@
 	import { sendMessage, getMessages } from '$lib/config/controllers';
 	import { db } from '$lib/config/app';
 	import { doc, onSnapshot } from "firebase/firestore";
+	import { blur } from 'svelte/transition';
 
 	let count = 0, message = 'Aa...', user = '';
 	const uname_cols = new Set();
@@ -154,7 +155,7 @@
 			
 			{#if messages.length !== 0}
 			{#each messages as msg}
-			<div class="{insertClass(msg.uname)}">
+			<div class="{insertClass(msg.uname)}" transition:blur>
 				<span class="uname" style="color:hsl({getRand(msg.uname)},70%,30%)"><b>{@html getUname(msg.uname)}:</b></span>
 				<span class="message">{@html handleMessageLoad(msg.message)}</span>
 				<span class="timestamp">{ msg.created }</span>

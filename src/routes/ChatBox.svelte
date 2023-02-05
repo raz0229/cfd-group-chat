@@ -128,6 +128,13 @@
 				<sup>DEV</sup>
 			</span>
 			`
+		if (uname == 'ꮧꮰ043')
+			return `
+			👑 ꮧꮰ043
+			<span>
+				<sup>MOD</sup>
+			</span>
+			`
 		return uname;
 	}
 

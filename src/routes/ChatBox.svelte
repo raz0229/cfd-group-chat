@@ -15,7 +15,7 @@
 
 	let showLoadingBar = false;
 	let messages = [];
-	let counter = 30;
+	let counter = 50;
 
 	const displayed_count = spring();
 	$: displayed_count.set(count);

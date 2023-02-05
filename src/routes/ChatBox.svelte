@@ -37,6 +37,7 @@
 		} catch {
 			messages = [{message:"Network Error! Please reload", created: ":(", uname: "*-*"}]; 
 		}
+
 		showLoadingBar = false;
 	}
 	})
@@ -45,6 +46,8 @@
 	const unsub = onSnapshot(doc(db, "chats", "messages"), (doc) => {
     	if (doc.data())
 			messages = doc.data().messages
+
+		setTimeout(() => scrollDown());
 	});
 
 	/**
@@ -79,6 +82,14 @@
 			sendHandler()
 
 	}
+	
+	function scrollDown() {
+		if (browser) {
+			const wrapper = document.querySelector(".messages-wrapper")
+			if (wrapper)
+				wrapper.scrollTo(0, wrapper.scrollHeight);
+		}
+	}
 
 	function getRand(uname='') {
 		let col_val;
@@ -93,12 +104,6 @@
 				"uname": uname,
 				"val": col_val
 			})
-		}
-
-		if (browser) {
-			const wrapper = document.querySelector(".messages-wrapper")
-			if (wrapper)
-				wrapper.scrollTo(0, wrapper.scrollHeight);
 		}
 		return col_val
 	}

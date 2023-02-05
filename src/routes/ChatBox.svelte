@@ -9,7 +9,7 @@
 	import { db } from '$lib/config/app';
 	import { doc, onSnapshot } from "firebase/firestore";
 	import { blur } from 'svelte/transition';
-
+	
 	let count = 0, message = 'Aa...', user = '';
 	const uname_cols = new Set();
 
@@ -71,6 +71,9 @@
 	
 	async function sendHandler() {
 		const msg = message.trim();
+
+		new Audio('/audio/message-appear.wav').play();
+
 		message = '';
 
 		await sendMessage(msg, user);
@@ -78,7 +81,10 @@
 
 	function handleKeyDown(pressed) {
 		
-		let img = document.querySelector('.sendIcon'); 
+		let img = document.querySelector('.sendIcon');
+		
+		new Audio('/audio/single-button-press.wav').play();
+
 		if (message.trim().length == 0)
 			img.src = sendIconDisabled;
 		else

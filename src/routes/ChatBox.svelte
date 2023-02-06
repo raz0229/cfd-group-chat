@@ -5,9 +5,9 @@
 	import { browser } from '$app/environment';
 	import { onMount } from 'svelte';
 	import Loader from './Loader.svelte';
-	import { sendMessage, getMessages } from '$lib/config/controllers';
+	import { sendMessage, getMessages, addToSeenList, clearSeenList, getSeenList } from '$lib/config/controllers';
 	import { db } from '$lib/config/app';
-	import { doc, onSnapshot } from "firebase/firestore";
+	import { doc, onSnapshot, collection, query, where } from "firebase/firestore";
 	import { blur } from 'svelte/transition';
 	
 	let count = 0, message = 'Aa...', user = '';
@@ -16,7 +16,7 @@
 	let showLoadingBar = false;
 	let messages = [];
 	let counter = 50;
-
+	let readers = [];
 	const displayed_count = spring();
 	$: displayed_count.set(count);
 	$: offset = modulo($displayed_count, 1);
@@ -41,19 +41,54 @@
 			messages = [{message:"Network Error! Please reload", created: ":(", uname: "*-*"}]; 
 		}
 
+		await addToSeenList(user);
+		readers = await getSeenList();
 		showLoadingBar = false;
 	}
 	})
 
 	// Listen for real-time updates
-	const unsub = onSnapshot(doc(db, "chats", "messages"), (doc) => {
-    	if (doc.data()) {
-			counter++;
-			messages = doc.data().messages;
-			messages.splice(0, messages.length - counter);
-		}
+	const q = query(collection(db, "chats"), where("state", "==", "active"));
+	const unsub = onSnapshot(q, (snapshot) => {
+		snapshot.docChanges().forEach(async (change) => {
 
-		setTimeout(() => scrollDown());
+			// NEW message is received?
+			if (change.type === 'modified') {
+				counter++;
+				messages = change.doc.data().messages;
+				messages.splice(0, messages.length - counter);
+				await clearSeenList();
+				// if (user) {
+				// 	try {
+				// 		await addToSeenList(user);
+				// 	} catch (e) {
+				// 		console.log("Seen List not found")
+				// 	}
+				// }
+			}
+
+			setTimeout(() => scrollDown());
+		})
+
+	});
+
+	const q2 = query(collection(db, "chats"), where("state", "==", "seen"));
+	const unsubSeenList = onSnapshot(q2, (snapshot) => {
+		snapshot.docChanges().forEach(async (change) => {
+
+			if (change.type === 'modified' || change.type === 'added') {
+				readers = change.doc.data().seen;
+			}
+
+			if (user) {
+				try {
+					await addToSeenList(user);
+				} catch (e) {
+					console.log("Seen List not found")
+				}
+			}
+		})
+
 	});
 
 	/**
@@ -182,6 +217,24 @@
 			{:else}
 				<h1>No Messages Yet! :(</h1>
 			{/if}
+
+			{#if readers.length !== 0}
+			<p class="readlist">Seen by:
+				{#each readers as reader, i}
+					{#if i < 10}
+						<span>{ reader }
+							{#if i < 9 && i < readers.length - 1}
+							,
+							{/if}
+						</span>
+					{/if}
+				{/each}	
+				{#if readers.length > 9}
+				<span> + { readers.length - 9 } more</span>
+				{/if}
+			</p>
+			{/if}
+
 		</div>
 
 		{/if}
@@ -257,7 +310,12 @@
 		padding: 2px;
 		cursor: pointer;
 	}
-
+	p.readlist {
+    text-align: end;
+    margin: 15px;
+    font-size: 13px;
+    color: #8b8d8f;
+}
 	/* Single line contenteditable paragraph input */
 	/* [contenteditable="true"].single-line {
 	    white-space: nowrap;

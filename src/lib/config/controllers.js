@@ -15,18 +15,60 @@ export const getMessages = async () => {
   }
 }
 
+export const getSeenList = async () => {
+  const docRef = doc(db, "chats", "seenlist");
+  const docSnap = await getDoc(docRef);
+
+  if (docSnap.exists()) {
+    return docSnap.data().seen
+  } else {
+    return -1;
+  }
+}
+
 export const sendMessage = async (msg, uname) => {
   const washingtonRef = doc(db, "chats", "messages");
   const day = new Date().toString()
   // Atomically add a new region to the "regions" array field.
-  await updateDoc(washingtonRef, {
+ if (msg.length != 0) {
+    await updateDoc(washingtonRef, {
       messages: arrayUnion({
         message: msg,
         created: day.substring(4,10) + day.substring(15,21),
         uname
-      })
+    })
   });
+ }
 
+}
+
+export const addToSeenList = async (uname) => {
+
+  const docRef = doc(db, "chats", "seenlist");
+  const docSnap = await getDoc(docRef);
+  
+  if (uname) {
+    if (docSnap.exists()) {
+      await updateDoc(docRef, {
+        seen: arrayUnion(uname)
+      });
+    } else {
+      await setDoc(doc(collection(db, "chats"), "seenlist"), {
+        seen: [uname],
+        state: "seen"
+      })
+    }
+  }
+
+}
+
+export const clearSeenList = async () => {
+  // delete seen list
+  const docRef = doc(db, "chats", "seenlist");
+  const usersRef = collection(db, "chats");
+  
+  
+  await deleteDoc(docRef);
 }
 
 export const deleteUser = async (uname='', uuid='0x000000000000') => {

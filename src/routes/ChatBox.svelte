@@ -10,11 +10,11 @@
 	import { doc, onSnapshot, collection, query, where } from "firebase/firestore";
 	import { blur } from 'svelte/transition';
 	
-	let count = 0, message = 'Aa...', user = '';
+	let count = 0, message = 'Aa...', user = '', scrollValue = 0, tempScroll = 0;
 	const uname_cols = new Set();
 
 	let showLoadingBar = false;
-	let messages = [];
+	let messages = [], allMessages = [];
 	let counter = 50;
 	let readers = [];
 	const displayed_count = spring();
@@ -36,7 +36,9 @@
 
 		try {
 			messages = await getMessages();
-			messages.splice(0, messages.length - counter);
+			allMessages = messages;
+			messages = messages.slice(-1 * counter);
+			//messages.splice(0, messages.length - counter);
 		} catch {
 			messages = [{message:"Network Error! Please reload", created: ":(", uname: "*-*"}]; 
 		}
@@ -58,13 +60,6 @@
 				messages = change.doc.data().messages;
 				messages.splice(0, messages.length - counter);
 				await clearSeenList();
-				// if (user) {
-				// 	try {
-				// 		await addToSeenList(user);
-				// 	} catch (e) {
-				// 		console.log("Seen List not found")
-				// 	}
-				// }
 			}
 
 			setTimeout(() => scrollDown());
@@ -138,6 +133,22 @@
 		}
 	}
 
+	function scrollHandler() {
+		if (browser) {
+			let wrapper = document.querySelector(".messages-wrapper")
+			if (wrapper) {
+
+				if (wrapper.scrollTop <= 0 && counter <= messages.length) {
+					messages = allMessages;
+					counter += 50;
+					messages = messages.slice(-1 * counter);
+					tempScroll = wrapper?.scrollHeight - tempScroll;
+					wrapper.scrollTo({top: tempScroll, behavior: "smooth"})
+				}
+			}
+		}
+	}
+
 	function getRand(uname='') {
 		let col_val;
 		uname_cols.forEach(elem => {
@@ -199,7 +210,7 @@
 		{#if showLoadingBar}
 			<Loader />
 		{:else}
-		<div class="messages-wrapper">
+		<div class="messages-wrapper" on:scroll={scrollHandler}>
 			<div class="in-message">
 				<span class="uname" style="color:hsl({getRand('raz0229')},70%,30%)"><b>👑 raz0229 <span><sup>DEV</sup></span>:</b></span>
 				<span class="message">Hi! Welcome to FAST-CFD Chat. Be civil and respectful</span>
